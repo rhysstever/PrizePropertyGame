@@ -22,9 +22,9 @@ public class Player
 	private int incomeMulitplier;
 
 	// Land & Buildings
-	private bool isPropertyCheapLandCleared;
-	private bool isPropertyExpensiveLandCleared;
-	private bool isResortLandCleared;
+	private bool isTier1LandCleared;
+	private bool isTier2LandCleared;
+	private bool isTier3LandCleared;
 	private List<Building> buildings;
 
 	// Town Meeting Cards
@@ -35,6 +35,7 @@ public class Player
 	#region Properties
 	public string PlayerName { get { return playerName; } }
 	public int CurrentMoney { get { return currentMoney; } }
+	public int IncomeMulitplier { get { return incomeMulitplier; } }
 	#endregion
 
 	#region Constructors
@@ -84,9 +85,9 @@ public class Player
 	private void SetupLand()
 	{
 		// Sets all land to not be cleared
-		isPropertyCheapLandCleared = false;
-		isPropertyExpensiveLandCleared = false;
-		isResortLandCleared = false;
+		isTier1LandCleared = false;
+		isTier2LandCleared = false;
+		isTier3LandCleared = false;
 
 		// Creates all new buildings
 		buildings = new List<Building>();

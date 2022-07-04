@@ -15,4 +15,15 @@ public class BuildingManager : MonoBehaviour
     {
         
     }
+
+    public bool CanBuy(Player player, Building building)
+	{
+        // Check if the land has been cleared
+
+        // Check if the player has not already built the building
+
+        // Check if the player has enough money
+        
+        return true;
+	}
 }

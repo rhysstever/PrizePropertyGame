@@ -128,6 +128,7 @@ public class GameManager : MonoBehaviour
                 break;
             case TurnState.BuyTownMeetingCards:
                 tempIncome = 0;
+                UIManager.instance.UpdateRedDot(CurrentTurn, false);
                 break;
             case TurnState.BuyProperties:
                 break;
@@ -181,6 +182,7 @@ public class GameManager : MonoBehaviour
             {
                 // If a '0' is rolled (a red dot) the player gets 0 income for this turn
                 tempIncome = 0;
+                UIManager.instance.UpdateRedDot(CurrentTurn, true);
                 ChangeTurnState(TurnState.OpprotunityCard);
 			}
             else 

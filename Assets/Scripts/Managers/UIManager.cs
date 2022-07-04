@@ -32,18 +32,14 @@ public class UIManager : MonoBehaviour
     private GameObject playButton, quitButton, gameEndToMainMenuButton;
     [SerializeField]    // Players' stats text objects
     private GameObject player1StatsText, player2StatsText, player3StatsText, player4StatsText;
-    [SerializeField]
-    private GameObject player1TurnMarker, player2TurnMarker, player3TurnMarker, player4TurnMarker;
 
     // Non-UI Elements
     private Dictionary<Player, GameObject> playerStatsText;
-    private List<GameObject> playerTurnMarkers;
 
     // Start is called before the first frame update
     void Start()
     {
         SetupPlayerStatsTextDictionary();
-        SetupPlayerTurnMarkersList();
         SetupUI();
     }
 
@@ -62,21 +58,27 @@ public class UIManager : MonoBehaviour
         playButton.GetComponent<Button>().onClick.AddListener(() => GameManager.instance.ChangeMenuState(MenuState.Game));
         quitButton.GetComponent<Button>().onClick.AddListener(() => Application.Quit());
         gameEndToMainMenuButton.GetComponent<Button>().onClick.AddListener(() => GameManager.instance.ChangeMenuState(MenuState.MainMenu));
-
-        // Set number values for each player stats text
-        for(int i = 0; i < GameManager.instance.Players.Count; i++)
-            UpdatePlayerStatsText(i);
     }
 
+    /// <summary>
+    /// Runs recurring logic, updating UI elements
+    /// </summary>
     private void UpdateUI()
     {
-        // End early if it is not the game menu state
-        if(GameManager.instance.CurrentMenuState != MenuState.Game)
-            return;
+        if(GameManager.instance.CurrentMenuState == MenuState.Game)
+		{
+            // Based on which player is taking their turn, update their stats text
+            UpdatePlayerStatsText(GameManager.instance.CurrentTurn);
 
-        // Based on which player is taking their turn, update their stats text
-        UpdatePlayerStatsText(GameManager.instance.CurrentTurn);
-        UpdateTurnMarkers(GameManager.instance.CurrentTurn);
+            // Change the color of the panel of the player who's turn it is
+            for(int i = 0; i < gameParent.transform.childCount; i++)
+			{
+                if(i == GameManager.instance.CurrentTurn)
+                    gameParent.transform.GetChild(i).GetComponent<Image>().color = Color.yellow;
+				else
+                    gameParent.transform.GetChild(i).GetComponent<Image>().color = Color.white;
+			}
+        }
     }
 
     /// <summary>
@@ -97,6 +99,10 @@ public class UIManager : MonoBehaviour
                 break;
             case MenuState.Game:
                 gameParent.gameObject.SetActive(true);
+
+                // Hide all red dots
+                for(int i = 0; i < gameParent.transform.childCount; i++)
+                    UpdateRedDot(i, false);
                 break;
             case MenuState.GameEnd:
                 gameEndParent.gameObject.SetActive(true);
@@ -123,28 +129,17 @@ public class UIManager : MonoBehaviour
     /// <param name="currentTurn">The index of the player that currently is taking their turn</param>
     private void UpdatePlayerStatsText(int currentTurn)
 	{
-        string updatedText = "Income: " + GameManager.instance.TempIncome + "\nMoney: " + GameManager.instance.Players[currentTurn].CurrentMoney;
-        playerStatsText[GameManager.instance.Players[currentTurn]].GetComponent<TMP_Text>().text = updatedText;
+        string updatedText = "Money: " + GameManager.instance.Players[currentTurn].CurrentMoney;
+
+        // Only display the "+ income" text if it is that player's turn and they are still rolling for income
+        if(GameManager.instance.CurrentTurnState == TurnState.Income)
+            updatedText += " + " + GameManager.instance.TempIncome * GameManager.instance.Players[currentTurn].IncomeMulitplier;
+
+        gameParent.transform.GetChild(currentTurn).GetChild(1).GetComponent<TMP_Text>().text = updatedText;
     }
 
-    private void SetupPlayerTurnMarkersList()
+    public void UpdateRedDot(int currentTurn, bool isToBeHiding)
 	{
-        playerTurnMarkers = new List<GameObject>();
-
-        playerTurnMarkers.Add(player1TurnMarker);
-        playerTurnMarkers.Add(player2TurnMarker);
-        playerTurnMarkers.Add(player3TurnMarker);
-        playerTurnMarkers.Add(player4TurnMarker);
+        gameParent.transform.GetChild(currentTurn).GetChild(2).gameObject.SetActive(isToBeHiding);
     }
-
-    public void UpdateTurnMarkers(int currentTurn)
-	{
-        for(int i = 0; i < playerTurnMarkers.Count; i++)
-		{
-            if(i == currentTurn)
-                playerTurnMarkers[i].SetActive(true);
-            else 
-                playerTurnMarkers[i].SetActive(false);
-		}
-	}
 }
