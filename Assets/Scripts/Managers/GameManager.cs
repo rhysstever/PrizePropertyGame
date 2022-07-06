@@ -149,7 +149,10 @@ public class GameManager : MonoBehaviour
                 break;
             case TurnState.OpprotunityCard:
                 if(Input.GetKeyDown(KeyCode.Return))
+				{
+                    players[currentTurn].CollectIncome(tempIncome);
                     ChangeTurnState(TurnState.BuyTownMeetingCards);
+				}
                 break;
             case TurnState.BuyTownMeetingCards:
                 if(Input.GetKeyDown(KeyCode.Return))
@@ -190,10 +193,7 @@ public class GameManager : MonoBehaviour
 		}
         // Press 'T' to "stay"; the player will gain the income accumulated
         else if(Input.GetKeyDown(KeyCode.T))
-		{
-            players[currentTurn].CollectIncome(tempIncome);
             ChangeTurnState(TurnState.OpprotunityCard);
-        }
 	}
 
     /// <summary>

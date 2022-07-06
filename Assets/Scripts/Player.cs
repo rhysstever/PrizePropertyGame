@@ -92,15 +92,9 @@ public class Player
 		// Creates all new buildings
 		buildings = new List<Building>();
 
-		buildings.Add(new Building("CampOffice", BuildingTier.Tier1));
-		buildings.Add(new Building("Marina", BuildingTier.Tier1));
-		buildings.Add(new Building("TennisSwimClub", BuildingTier.Tier1));
-		buildings.Add(new Building("DudeRanch", BuildingTier.Tier2));
-		buildings.Add(new Building("GolfClub", BuildingTier.Tier2));
-		buildings.Add(new Building("HealthSpa", BuildingTier.Tier2));
-		buildings.Add(new Building("Casino", BuildingTier.Tier3));
-		buildings.Add(new Building("Hotel", BuildingTier.Tier3));
-		buildings.Add(new Building("SkiLodge", BuildingTier.Tier3));
+		List<Building> listOfBuildings = BuildingManager.instance.Buildings;
+		foreach(Building building in listOfBuildings)
+			buildings.Add(building.Clone());
 	}
 
 	/// <summary>
@@ -111,13 +105,13 @@ public class Player
 		// Default multiplier amount
 		int multiplier = 1;
 
-		if(IsSetBuilt(BuildingTier.Tier1))
+		if(IsBuilt(BuildingTier.Tier1))
 			multiplier++;
 
-		if(IsSetBuilt(BuildingTier.Tier2))
+		if(IsBuilt(BuildingTier.Tier2))
 			multiplier++;
 
-		if(IsSetBuilt(BuildingTier.Tier3))
+		if(IsBuilt(BuildingTier.Tier3))
 			multiplier++;
 
 		// All sets are built, so all buildings are built,
@@ -131,11 +125,25 @@ public class Player
 	}
 
 	/// <summary>
-	/// Checks if a set of proprties have been built
+	/// Gets if a player has built a specific building
+	/// </summary>
+	/// <param name="building">The building being checked</param>
+	/// <returns>Whether the player has built that building</returns>
+	public bool IsBuilt(Building building)
+	{
+		foreach(Building playerBuilding in buildings)
+			if(building.BuildingName == playerBuilding.BuildingName)
+				return building.IsBought;
+
+		return false;
+	}
+
+	/// <summary>
+	/// Gets if a player has built a set of buildings
 	/// </summary>
 	/// <param name="buildingType">The type of building of the set that is being checked</param>
-	/// <returns>Whether all 3 buildings of the set have been built</returns>
-	private bool IsSetBuilt(BuildingTier buildingType)
+	/// <returns>Whether the player has built all 3 buildings of the set type</returns>
+	public bool IsBuilt(BuildingTier buildingType)
 	{
 		// Determine an index offset based on the type of set is being checked 
 		int indexOffset = (int)buildingType * 3;
@@ -155,6 +163,17 @@ public class Player
 	public void CollectIncome(int incomeAmount)
 	{
 		currentMoney += incomeAmount * incomeMulitplier;
+	}
+	
+	/// <summary>
+	/// Causes the player to lose a building
+	/// </summary>
+	/// <param name="building">The building the player will lose</param>
+	public void LoseBuilding(Building building)
+	{
+		foreach(Building playerBuilding in buildings)
+			if(playerBuilding.BuildingName == building.BuildingName)
+				playerBuilding.Lose();
 	}
 	#endregion
 

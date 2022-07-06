@@ -133,7 +133,14 @@ public class UIManager : MonoBehaviour
 
         // Only display the "+ income" text if it is that player's turn and they are still rolling for income
         if(GameManager.instance.CurrentTurnState == TurnState.Income)
+		{
             updatedText += " + " + GameManager.instance.TempIncome * GameManager.instance.Players[currentTurn].IncomeMulitplier;
+        } else if(GameManager.instance.CurrentTurnState == TurnState.OpprotunityCard)
+		{
+            int totalIncome = GameManager.instance.TempIncome * GameManager.instance.Players[currentTurn].IncomeMulitplier;
+            if(totalIncome > 0)
+                updatedText += " + " + totalIncome;
+        }
 
         gameParent.transform.GetChild(currentTurn).GetChild(1).GetComponent<TMP_Text>().text = updatedText;
     }
