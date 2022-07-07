@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -39,15 +40,12 @@ public class GameManager : MonoBehaviour
     #endregion
 
     // Players
+    private Dictionary<Color, string> playerColors;
     private List<Player> players;
-
-    [SerializeField]
     private int currentTurn;
 
     // States
-    [SerializeField]
     private MenuState currentMenuState;
-    [SerializeField]
     private TurnState currentTurnState;
 
     // Misc Values
@@ -56,16 +54,12 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        players = new List<Player>();
-
-        players.Add(new Player(PlayerColor.Red));
-        players.Add(new Player(PlayerColor.Blue));
-        players.Add(new Player(PlayerColor.Orange));
-        players.Add(new Player(PlayerColor.Yellow));
+        SetupPlayerColorDictionary();
+        CreatePlayers();
 
         currentTurn = -1;
         ChangeMenuState(MenuState.MainMenu);
-        ChangeTurnState(TurnState.Income);
+        ChangeTurnState(TurnState.Menus);
 
         tempIncome = 0;
     }
@@ -77,6 +71,7 @@ public class GameManager : MonoBehaviour
     }
 
     // Getters
+    public Dictionary<Color, string> PlayerColors { get { return playerColors; } }
     public List<Player> Players { get { return players; } }
     public int CurrentTurn { get { return currentTurn; } }
     public MenuState CurrentMenuState { get { return currentMenuState; } }
@@ -136,6 +131,33 @@ public class GameManager : MonoBehaviour
 
         currentTurnState = newTurnState;
 	}
+
+    /// <summary>
+    /// Fills the dictionary of player colors
+    /// </summary>
+    private void SetupPlayerColorDictionary()
+	{
+        playerColors = new Dictionary<Color, string>();
+
+        playerColors.Add(Color.red, "Red");
+        playerColors.Add(Color.blue, "Blue");
+        playerColors.Add(Color.green, "Green");
+        playerColors.Add(Color.yellow, "Yellow");
+    }
+
+    /// <summary>
+    /// Creates the players for the game
+    /// </summary>
+    private void CreatePlayers()
+	{
+        players = new List<Player>();
+
+        // Add players
+        players.Add(new Player(Color.red));
+        players.Add(new Player(Color.blue));
+        players.Add(new Player(Color.green));
+        players.Add(new Player(Color.yellow));
+    }
 
     /// <summary>
     /// Recurring checks for actions that can be taken on the player's turn
@@ -203,7 +225,7 @@ public class GameManager : MonoBehaviour
     private int Roll()
 	{
         // Make a roll from 1-6
-        int roll = Random.Range(1, 7);
+        int roll = UnityEngine.Random.Range(1, 7);
 
         // Roll     :   Outcome
         // 1        :   Red dot - no income awarded this turn 
@@ -223,8 +245,8 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// Ends the game
     /// </summary>
-    /// <param name="colorOfWinner">The color of the player that won</param>
-    public void EndGame(PlayerColor colorOfWinner)
+    /// <param name="winner">The player that has won the game</param>
+    public void EndGame(Player winner)
 	{
         ChangeMenuState(MenuState.GameEnd);
 	}

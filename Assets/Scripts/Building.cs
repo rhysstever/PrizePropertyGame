@@ -18,7 +18,7 @@ public class Building
 
 	#region Properties
 	public string BuildingName { get { return buildingName; } }
-	public BuildingTier BuildingType { get { return buildingTier; } }
+	public BuildingTier BuildingTier { get { return buildingTier; } }
 	public string FullName { get { return fullName; } }
 	public int Cost { get { return cost; } }
 	public bool IsBought { get { return isBought; } }

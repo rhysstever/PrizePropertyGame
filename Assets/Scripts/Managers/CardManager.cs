@@ -44,7 +44,7 @@ public class CardManager : MonoBehaviour
 
     private void CreateCards()
 	{
-
+        // TODO: build deck of opprotunity cards
 	}
 
     private void ShuffleDeck()
@@ -97,7 +97,7 @@ public class CardManager : MonoBehaviour
             GameManager.instance.Players[GameManager.instance.CurrentTurn].LoseBuilding(buildingToDestroy);
     }
 
-    // Lose/Double Income
+    // TODO: Lose/Double Income
 
-    // Share static amount
+    // TODO: Share static amount
 }

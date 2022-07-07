@@ -30,16 +30,14 @@ public class UIManager : MonoBehaviour
     private GameObject mainMenuParent, gameParent, gameEndParent;
     [SerializeField]    // Buttons
     private GameObject playButton, quitButton, gameEndToMainMenuButton;
-    [SerializeField]    // Players' stats text objects
-    private GameObject player1StatsText, player2StatsText, player3StatsText, player4StatsText;
 
     // Non-UI Elements
-    private Dictionary<Player, GameObject> playerStatsText;
+    private Dictionary<Player, GameObject> playerStatsUI;
 
     // Start is called before the first frame update
     void Start()
     {
-        SetupPlayerStatsTextDictionary();
+        SetupPlayerStatsParentsDictionary();
         SetupUI();
     }
 
@@ -58,6 +56,13 @@ public class UIManager : MonoBehaviour
         playButton.GetComponent<Button>().onClick.AddListener(() => GameManager.instance.ChangeMenuState(MenuState.Game));
         quitButton.GetComponent<Button>().onClick.AddListener(() => Application.Quit());
         gameEndToMainMenuButton.GetComponent<Button>().onClick.AddListener(() => GameManager.instance.ChangeMenuState(MenuState.MainMenu));
+
+        // Player Names Text
+        for(int i = 0; i < GameManager.instance.Players.Count; i++)
+		{
+            Player player = GameManager.instance.Players[i];
+            playerStatsUI[player].transform.GetChild(0).GetComponent<TMP_Text>().text = GameManager.instance.PlayerColors[player.Color] + " Player";
+        }
     }
 
     /// <summary>
@@ -73,10 +78,13 @@ public class UIManager : MonoBehaviour
             // Change the color of the panel of the player who's turn it is
             for(int i = 0; i < gameParent.transform.childCount; i++)
 			{
-                if(i == GameManager.instance.CurrentTurn)
-                    gameParent.transform.GetChild(i).GetComponent<Image>().color = Color.yellow;
-				else
-                    gameParent.transform.GetChild(i).GetComponent<Image>().color = Color.white;
+                if(i == GameManager.instance.CurrentTurn
+                    && GameManager.instance.CurrentTurnState == TurnState.Income)
+					gameParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.yellow;
+                else if(i == GameManager.instance.CurrentTurn)
+					gameParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.green;
+                else
+					gameParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.white;
 			}
         }
     }
@@ -111,16 +119,14 @@ public class UIManager : MonoBehaviour
 	}
 
     /// <summary>
-    /// Links a player to the UI element that displays its stats
+    /// Links a player object to the UI parent element that displays its stats
     /// </summary>
-    private void SetupPlayerStatsTextDictionary()
+    private void SetupPlayerStatsParentsDictionary()
 	{
-        playerStatsText = new Dictionary<Player, GameObject>();
+        playerStatsUI = new Dictionary<Player, GameObject>();
 
-        playerStatsText.Add(GameManager.instance.Players[0], player1StatsText);
-        playerStatsText.Add(GameManager.instance.Players[1], player2StatsText);
-        playerStatsText.Add(GameManager.instance.Players[2], player3StatsText);
-        playerStatsText.Add(GameManager.instance.Players[3], player4StatsText);
+        for(int i = 0; i < GameManager.instance.Players.Count; i++)
+            playerStatsUI.Add(GameManager.instance.Players[i], gameParent.transform.GetChild(i).GetChild(0).gameObject);
     }
 
     /// <summary>
@@ -135,18 +141,24 @@ public class UIManager : MonoBehaviour
         if(GameManager.instance.CurrentTurnState == TurnState.Income)
 		{
             updatedText += " + " + GameManager.instance.TempIncome * GameManager.instance.Players[currentTurn].IncomeMulitplier;
-        } else if(GameManager.instance.CurrentTurnState == TurnState.OpprotunityCard)
+        } 
+        else if(GameManager.instance.CurrentTurnState == TurnState.OpprotunityCard)
 		{
             int totalIncome = GameManager.instance.TempIncome * GameManager.instance.Players[currentTurn].IncomeMulitplier;
             if(totalIncome > 0)
                 updatedText += " + " + totalIncome;
         }
 
-        gameParent.transform.GetChild(currentTurn).GetChild(1).GetComponent<TMP_Text>().text = updatedText;
+        playerStatsUI[GameManager.instance.Players[currentTurn]].transform.GetChild(1).GetComponent<TMP_Text>().text = updatedText;
     }
 
+    /// <summary>
+    /// Updates a player's red dot sprite
+    /// </summary>
+    /// <param name="currentTurn">The player that is currently up</param>
+    /// <param name="isToBeHiding">Whether the red dot will be hidden or revealed</param>
     public void UpdateRedDot(int currentTurn, bool isToBeHiding)
 	{
-        gameParent.transform.GetChild(currentTurn).GetChild(2).gameObject.SetActive(isToBeHiding);
+        playerStatsUI[GameManager.instance.Players[currentTurn]].transform.GetChild(2).gameObject.SetActive(isToBeHiding);
     }
 }

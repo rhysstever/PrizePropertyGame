@@ -48,7 +48,12 @@ public class BuildingManager : MonoBehaviour
         
     }
 
-    public Building GetBuilding(string name)
+    /// <summary>
+    /// Gets a building by name
+    /// </summary>
+    /// <param name="name">The name of the building</param>
+    /// <returns>A building (not owned by a player)</returns>
+    public Building GetBuildingByName(string name)
 	{
         foreach(Building building in buildings)
             if(building.BuildingName.ToLower() == name.ToLower() 
@@ -58,14 +63,23 @@ public class BuildingManager : MonoBehaviour
         return null;
 	}
 
-    public bool CanBuy(Player player, Building building)
+    /// <summary>
+    /// Checks if a player can buy/build a building
+    /// </summary>
+    /// <param name="player">The player trying to build</param>
+    /// <param name="building">The building that is being built</param>
+    /// <returns>Whether the player can buy and build the building</returns>
+    public bool CanBuild(Player player, Building building)
 	{
         // Check if the land has been cleared
+        if(!player.IsLandCleared(building.BuildingTier))
+            return false;
 
         // Check if the player has not already built the building
+        if(player.IsBuilt(building))
+            return false;
 
         // Check if the player has enough money
-        
-        return true;
+        return player.CurrentMoney >= building.Cost;
 	}
 }

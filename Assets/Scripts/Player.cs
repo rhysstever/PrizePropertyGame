@@ -1,21 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-
-public enum PlayerColor
-{
-	Red, 
-	Blue, 
-	Orange, 
-	Yellow
-}
+using UnityEngine;
 
 public class Player
 {
 	#region Fields
 	// Player info
-	private PlayerColor color;
-	private string playerName;
+	private Color color;
 
 	// Money
 	private int currentMoney;
@@ -28,55 +20,32 @@ public class Player
 	private List<Building> buildings;
 
 	// Town Meeting Cards
-	private int legalActionCards;
-	private int defenseCards;
+	private int legalActionCardCount;
+	private int defenseCardCount;
 	#endregion
 
 	#region Properties
-	public string PlayerName { get { return playerName; } }
+	public Color Color { get { return color; } }
 	public int CurrentMoney { get { return currentMoney; } }
 	public int IncomeMulitplier { get { return incomeMulitplier; } }
 	#endregion
 
-	#region Constructors
 	/// <summary>
 	/// Creates a new player
 	/// </summary>
 	/// <param name="color">The color of the player</param>
-	public Player(PlayerColor color)
+	public Player(Color color)
 	{
 		this.color = color;
-		playerName = color.ToString() + " Player";
 
 		currentMoney = 15;
 		incomeMulitplier = 1;
 
 		SetupLand();
 
-		legalActionCards = 0;
-		defenseCards = 0;
+		legalActionCardCount = 0;
+		defenseCardCount = 0;
 	}
-
-	/// <summary>
-	/// Creates a new player
-	/// </summary>
-	/// <param name="color">The color of the player</param>
-	/// <param name="name">The name of the player</param>
-	public Player(PlayerColor color, string name)
-	{
-		this.color = color;
-		playerName = name;
-
-		currentMoney = 15;
-		incomeMulitplier = 1;
-
-		SetupLand();
-
-		legalActionCards = 0;
-		defenseCards = 0;
-
-	}
-	#endregion
 
 	#region Methods
 	/// <summary>
@@ -95,6 +64,31 @@ public class Player
 		List<Building> listOfBuildings = BuildingManager.instance.Buildings;
 		foreach(Building building in listOfBuildings)
 			buildings.Add(building.Clone());
+	}
+
+	/// <summary>
+	/// Builds a building
+	/// </summary>
+	/// <param name="building">The building being built</param>
+	public void Build(Building building)
+	{
+		// Check if the player can buy the 
+		if(!BuildingManager.instance.CanBuild(this, building))
+			return;
+
+		// Allow other players to challenge the building
+		// TODO: ask other players if they want to use a legal action card
+		
+		// "Build" the building
+		foreach(Building playerBuilding in buildings)
+			if(playerBuilding.BuildingName == building.BuildingName)
+				playerBuilding.Buy();
+
+		// Remove building cost from player
+		currentMoney -= building.Cost;
+
+		// Update the player's income mulitplier changes
+		PostBuildCheck();
 	}
 
 	/// <summary>
@@ -117,11 +111,26 @@ public class Player
 		// All sets are built, so all buildings are built,
 		// so the player has won the game
 		if(multiplier == 4)
-		{
-			GameManager.instance.EndGame(color);
-		}
+			GameManager.instance.EndGame(this);
 		else
 			incomeMulitplier = multiplier;
+	}
+
+	/// <summary>
+	/// Gets whether the player has cleared land
+	/// </summary>
+	/// <param name="tier">The tier of land</param>
+	/// <returns>Whether the tier of land is cleared</returns>
+	public bool IsLandCleared(BuildingTier tier)
+	{
+		if(tier == BuildingTier.Tier1)
+			return isTier1LandCleared;
+		else if(tier == BuildingTier.Tier2)
+			return isTier2LandCleared;
+		else if(tier == BuildingTier.Tier3)
+			return isTier3LandCleared;
+
+		return false;
 	}
 
 	/// <summary>
@@ -174,6 +183,38 @@ public class Player
 		foreach(Building playerBuilding in buildings)
 			if(playerBuilding.BuildingName == building.BuildingName)
 				playerBuilding.Lose();
+	}
+
+	/// <summary>
+	/// Plays a player's town meeting card
+	/// </summary>
+	/// <param name="cardName">Whether the card is a defense or legal action card</param>
+	public void PlayTownHallCard(string cardName)
+	{
+		if(cardName.ToLower() == "defense")
+		{
+			if(defenseCardCount > 0)
+			{
+				legalActionCardCount--;
+				TownMeetingManager.instance.AddDefense();
+			}
+			else
+			{
+				Debug.Log("Not enough defense cards");
+			}
+		}
+		else if(cardName.ToLower() == "legal action")
+		{
+			if(legalActionCardCount > 0)
+			{
+				legalActionCardCount--;
+				TownMeetingManager.instance.AddLegalAction();
+			}
+			else
+			{
+				Debug.Log("Not enough legal action cards");
+			}
+		}		
 	}
 	#endregion
 

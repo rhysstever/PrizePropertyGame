@@ -6,21 +6,21 @@ using UnityEngine.Events;
 public class Card
 {
     private string description;
-    private UnityEvent effect;
+    private UnityAction action;
 
     public string Description { get { return description; } }
-    public UnityEvent Effect { get { return effect; } }
+    public UnityAction Effect { get { return action; } }
 
-    public Card(string text, UnityEvent effect)
+    public Card(string text, UnityAction action)
 	{
         this.description = text;
-        this.effect = effect;
+        this.action = action;
     }
 
-    public Card(UnityEvent effect)
+    public Card(UnityAction action)
 	{
         description = "";
-        this.effect = effect;
+        this.action = action;
 	}
 
     /// <summary>
