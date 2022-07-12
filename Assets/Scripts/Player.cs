@@ -72,7 +72,7 @@ public class Player
 	/// <param name="building">The building being built</param>
 	public void Build(Building building)
 	{
-		// Check if the player can buy the 
+		// Check if the player can buy the building
 		if(!BuildingManager.instance.CanBuild(this, building))
 			return;
 
@@ -86,6 +86,8 @@ public class Player
 
 		// Remove building cost from player
 		currentMoney -= building.Cost;
+
+		Debug.Log(building.FullName + " built");
 
 		// Update the player's income mulitplier changes
 		PostBuildCheck();

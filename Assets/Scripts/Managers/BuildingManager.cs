@@ -26,6 +26,7 @@ public class BuildingManager : MonoBehaviour
     private Building currentSelectedBuilding;
 
     public List<Building> Buildings { get { return buildings; } }
+    public Building CurrentSelectedBuilding { get { return currentSelectedBuilding; } }
 
     // Start is called before the first frame update
     void Start()
@@ -56,7 +57,6 @@ public class BuildingManager : MonoBehaviour
     public void SelectBuilding(Building building)
 	{
         currentSelectedBuilding = building;
-        Debug.Log(building.BuildingName + " selected");
 	}
 
     /// <summary>
@@ -87,6 +87,14 @@ public class BuildingManager : MonoBehaviour
 	}
 
     /// <summary>
+    /// TODO
+    /// </summary>
+    public void CurrentPlayerBuildCurrentBuilding()
+	{
+        GameManager.instance.Players[GameManager.instance.CurrentTurn].Build(currentSelectedBuilding);
+	}
+
+    /// <summary>
     /// Checks if a player can buy/build a building
     /// </summary>
     /// <param name="player">The player trying to build</param>
@@ -96,11 +104,17 @@ public class BuildingManager : MonoBehaviour
 	{
         // Check if the land has been cleared
         if(!player.IsLandCleared(building.BuildingTier))
+		{
+            Debug.Log("Land not cleared!");
             return false;
+		}
 
         // Check if the player has not already built the building
         if(player.IsBuilt(building))
+        {
+            Debug.Log("The building is already built!");
             return false;
+        }
 
         // Check if the player has enough money
         return player.CurrentMoney >= building.Cost;

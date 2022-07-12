@@ -32,6 +32,8 @@ public class UIManager : MonoBehaviour
     private GameObject playButton, quitButton, gameEndToMainMenuButton;
     [SerializeField]
     private GameObject mapParent;
+    [SerializeField]
+    private GameObject selectedBuildingParent;
 
     // Non-UI Elements
     private Dictionary<Player, GameObject> playerStatsUI;
@@ -54,7 +56,7 @@ public class UIManager : MonoBehaviour
     /// </summary>
     private void SetupUI()
 	{
-        // Events
+        // Menu Buttons
         playButton.GetComponent<Button>().onClick.AddListener(() => GameManager.instance.ChangeMenuState(MenuState.Game));
         quitButton.GetComponent<Button>().onClick.AddListener(() => Application.Quit());
         gameEndToMainMenuButton.GetComponent<Button>().onClick.AddListener(() => GameManager.instance.ChangeMenuState(MenuState.MainMenu));
@@ -72,6 +74,10 @@ public class UIManager : MonoBehaviour
 			    foreach(Transform buildingChild in mapParent.transform.GetChild(i))
 				    if(buildingChild.GetComponent<Button>() != null)
 					    buildingChild.GetComponent<Button>().onClick.AddListener(() => SelectBuilding(buildingChild.gameObject.name));
+
+        // Buy Building Button
+        selectedBuildingParent.transform.GetChild(0).GetChild(2).GetComponent<Button>().onClick.AddListener(
+            () => BuildingManager.instance.CurrentPlayerBuildCurrentBuilding());
 	}
 
     /// <summary>
@@ -98,6 +104,18 @@ public class UIManager : MonoBehaviour
                 else
 					gameParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.white;
 			}
+
+            // Update the selected building
+            if(BuildingManager.instance.CurrentSelectedBuilding == null)
+                selectedBuildingParent.SetActive(false);
+			else
+			{
+                selectedBuildingParent.SetActive(true);
+                selectedBuildingParent.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text 
+                    = BuildingManager.instance.CurrentSelectedBuilding.FullName;
+                selectedBuildingParent.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text 
+                    = "Cost: $" + BuildingManager.instance.CurrentSelectedBuilding.Cost;
+            } 
         }
     }
 
