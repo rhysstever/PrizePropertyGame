@@ -30,6 +30,8 @@ public class UIManager : MonoBehaviour
     private GameObject mainMenuParent, gameParent, gameEndParent;
     [SerializeField]    // Buttons
     private GameObject playButton, quitButton, gameEndToMainMenuButton;
+    [SerializeField]
+    private GameObject mapParent;
 
     // Non-UI Elements
     private Dictionary<Player, GameObject> playerStatsUI;
@@ -63,7 +65,14 @@ public class UIManager : MonoBehaviour
             Player player = GameManager.instance.Players[i];
             playerStatsUI[player].transform.GetChild(0).GetComponent<TMP_Text>().text = GameManager.instance.PlayerColors[player.Color] + " Player";
         }
-    }
+
+		// Map Building Buttons
+		for(int i = 0; i < mapParent.transform.childCount; i++)
+            if(mapParent.transform.GetChild(i).tag == "playerBuildingParent")
+			    foreach(Transform buildingChild in mapParent.transform.GetChild(i))
+				    if(buildingChild.GetComponent<Button>() != null)
+					    buildingChild.GetComponent<Button>().onClick.AddListener(() => SelectBuilding(buildingChild.gameObject.name));
+	}
 
     /// <summary>
     /// Runs recurring logic, updating UI elements
@@ -78,6 +87,9 @@ public class UIManager : MonoBehaviour
             // Change the color of the panel of the player who's turn it is
             for(int i = 0; i < gameParent.transform.childCount; i++)
 			{
+                if(gameParent.transform.GetChild(i).tag != "playerPanel")
+                    continue;
+
                 if(i == GameManager.instance.CurrentTurn
                     && GameManager.instance.CurrentTurnState == TurnState.Income)
 					gameParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.yellow;
@@ -110,7 +122,8 @@ public class UIManager : MonoBehaviour
 
                 // Hide all red dots
                 for(int i = 0; i < gameParent.transform.childCount; i++)
-                    UpdateRedDot(i, false);
+                    if(gameParent.transform.GetChild(i).tag == "playerPanel")
+                        UpdateRedDot(i, false);
                 break;
             case MenuState.GameEnd:
                 gameEndParent.gameObject.SetActive(true);
@@ -161,4 +174,17 @@ public class UIManager : MonoBehaviour
 	{
         playerStatsUI[GameManager.instance.Players[currentTurn]].transform.GetChild(2).gameObject.SetActive(isToBeHiding);
     }
+
+    /// <summary>
+    /// Interprets a building button into selecting that building
+    /// </summary>
+    /// <param name="buildingName">The name of the building button</param>
+    public void SelectBuilding(string buildingName)
+	{
+        Building selectedBuilding = BuildingManager.instance.GetBuildingByIndex(
+            int.Parse(buildingName.Substring(8, 1)),
+            int.Parse(buildingName.Substring(10, 1)));
+
+        BuildingManager.instance.SelectBuilding(selectedBuilding);
+	}
 }

@@ -23,6 +23,7 @@ public class BuildingManager : MonoBehaviour
     #endregion
 
     private List<Building> buildings;
+    private Building currentSelectedBuilding;
 
     public List<Building> Buildings { get { return buildings; } }
 
@@ -49,6 +50,16 @@ public class BuildingManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Select a new building
+    /// </summary>
+    /// <param name="building">The building being selected</param>
+    public void SelectBuilding(Building building)
+	{
+        currentSelectedBuilding = building;
+        Debug.Log(building.BuildingName + " selected");
+	}
+
+    /// <summary>
     /// Gets a building by name
     /// </summary>
     /// <param name="name">The name of the building</param>
@@ -61,6 +72,18 @@ public class BuildingManager : MonoBehaviour
                 return building;
 
         return null;
+	}
+
+    /// <summary>
+    /// Gets a building by tier and place indecies
+    /// </summary>
+    /// <param name="tier">The tier of the building (1-3)</param>
+    /// <param name="index">The place index of the building within the tier (1-3)</param>
+    /// <returns>The building at that index</returns>
+    public Building GetBuildingByIndex(int tier, int index)
+	{
+        int totalIndex = (tier - 1) * 3 + (index - 1);
+        return buildings[totalIndex];
 	}
 
     /// <summary>
