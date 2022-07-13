@@ -31,6 +31,20 @@ public class BuildingManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        CreateBuildingDictionary();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+
+    }
+
+    /// <summary>
+    /// Creates a dictionary with all the building types
+    /// </summary>
+    private void CreateBuildingDictionary()
+	{
         buildings = new List<Building>();
 
         buildings.Add(new Building("CampOffice", BuildingTier.Tier1, "Camp Office"));
@@ -42,12 +56,6 @@ public class BuildingManager : MonoBehaviour
         buildings.Add(new Building("Casino", BuildingTier.Tier3, "Casino and Night Club"));
         buildings.Add(new Building("Hotel", BuildingTier.Tier3, "Resort Hotel"));
         buildings.Add(new Building("SkiLodge", BuildingTier.Tier3, "Ski Condominium and Lodge"));
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     /// <summary>
@@ -87,36 +95,10 @@ public class BuildingManager : MonoBehaviour
 	}
 
     /// <summary>
-    /// TODO
+    /// Builds the currently selected building for the current player
     /// </summary>
     public void CurrentPlayerBuildCurrentBuilding()
 	{
-        GameManager.instance.Players[GameManager.instance.CurrentTurn].Build(currentSelectedBuilding);
-	}
-
-    /// <summary>
-    /// Checks if a player can buy/build a building
-    /// </summary>
-    /// <param name="player">The player trying to build</param>
-    /// <param name="building">The building that is being built</param>
-    /// <returns>Whether the player can buy and build the building</returns>
-    public bool CanBuild(Player player, Building building)
-	{
-        // Check if the land has been cleared
-        if(!player.IsLandCleared(building.BuildingTier))
-		{
-            Debug.Log("Land not cleared!");
-            return false;
-		}
-
-        // Check if the player has not already built the building
-        if(player.IsBuilt(building))
-        {
-            Debug.Log("The building is already built!");
-            return false;
-        }
-
-        // Check if the player has enough money
-        return player.CurrentMoney >= building.Cost;
+        GameManager.instance.CurrentPlayer.Build(currentSelectedBuilding);
 	}
 }

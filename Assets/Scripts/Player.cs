@@ -14,9 +14,7 @@ public class Player
 	private int incomeMulitplier;
 
 	// Land & Buildings
-	private bool isTier1LandCleared;
-	private bool isTier2LandCleared;
-	private bool isTier3LandCleared;
+	private bool[] isLandClearedArr;
 	private List<Building> buildings;
 
 	// Town Meeting Cards
@@ -54,9 +52,9 @@ public class Player
 	private void SetupLand()
 	{
 		// Sets all land to not be cleared
-		isTier1LandCleared = false;
-		isTier2LandCleared = false;
-		isTier3LandCleared = false;
+		isLandClearedArr = new bool[3];
+		for(int i = 0; i < isLandClearedArr.Length; i++)
+			isLandClearedArr[i] = false;
 
 		// Creates all new buildings
 		buildings = new List<Building>();
@@ -67,72 +65,107 @@ public class Player
 	}
 
 	/// <summary>
-	/// Builds a building
-	/// </summary>
-	/// <param name="building">The building being built</param>
-	public void Build(Building building)
-	{
-		// Check if the player can buy the building
-		if(!BuildingManager.instance.CanBuild(this, building))
-			return;
-
-		// Allow other players to challenge the building
-		// TODO: ask other players if they want to use a legal action card
-		
-		// "Build" the building
-		foreach(Building playerBuilding in buildings)
-			if(playerBuilding.BuildingName == building.BuildingName)
-				playerBuilding.Buy();
-
-		// Remove building cost from player
-		currentMoney -= building.Cost;
-
-		Debug.Log(building.FullName + " built");
-
-		// Update the player's income mulitplier changes
-		PostBuildCheck();
-	}
-
-	/// <summary>
-	/// Checks the player's buildings for their income multiplier and whether they won the game
-	/// </summary>
-	public void PostBuildCheck()
-	{
-		// Default multiplier amount
-		int multiplier = 1;
-
-		if(IsBuilt(BuildingTier.Tier1))
-			multiplier++;
-
-		if(IsBuilt(BuildingTier.Tier2))
-			multiplier++;
-
-		if(IsBuilt(BuildingTier.Tier3))
-			multiplier++;
-
-		// All sets are built, so all buildings are built,
-		// so the player has won the game
-		if(multiplier == 4)
-			GameManager.instance.EndGame(this);
-		else
-			incomeMulitplier = multiplier;
-	}
-
-	/// <summary>
 	/// Gets whether the player has cleared land
 	/// </summary>
 	/// <param name="tier">The tier of land</param>
 	/// <returns>Whether the tier of land is cleared</returns>
-	public bool IsLandCleared(BuildingTier tier)
+	private bool IsLandCleared(BuildingTier tier)
 	{
-		if(tier == BuildingTier.Tier1)
-			return isTier1LandCleared;
-		else if(tier == BuildingTier.Tier2)
-			return isTier2LandCleared;
-		else if(tier == BuildingTier.Tier3)
-			return isTier3LandCleared;
+		return isLandClearedArr[(int)tier];
+	}
 
-		return false;
+	/// <summary>
+	/// Whether the tier land can be cleared
+	/// </summary>
+	/// <param name="tier">The tier of land</param>
+	/// <returns>Whether the land can be cleared</returns>
+	private bool CanClearLand(BuildingTier tier)
+	{
+		// Make sure the player is at the right point in their turn
+		if(GameManager.instance.CurrentTurnState != TurnState.BuyProperties)
+		{
+			Debug.Log("Wrong turn state");
+			return false;
+		}
+
+		// Check that the land is not already cleared
+		if(IsLandCleared(tier))
+		{
+			Debug.Log("Land already cleared");
+			return false;
+		}
+
+		// Check if the player has enough money to clear the land
+		if(currentMoney < 5)
+		{
+			Debug.Log("Not enough money");
+			return false;
+		}
+
+		return true;
+	}
+
+	/// <summary>
+	/// Clears land of a certain tier
+	/// </summary>
+	/// <param name="tier">The tier being cleared</param>
+	public void ClearLand(BuildingTier tier)
+	{
+		if(!CanClearLand(tier))
+			return;
+
+		// Deduct the cost 		
+		currentMoney -= 5;
+
+		// Update UI
+		UIManager.instance.UpdatePlayerStatsText(this);
+
+		// Set the land to cleared
+		isLandClearedArr[(int)tier] = true;
+
+		// Hide the button
+		UIManager.instance.HideLandButton((int)tier);
+
+		// Advance the turn
+		GameManager.instance.AdvanceTurn();
+	}
+
+	/// <summary>
+	/// Checks if a player can buy/build a building
+	/// </summary>
+	/// <param name="building">The building that is being built</param>
+	/// <returns>Whether the player can buy and build the building</returns>
+	private bool CanBuild(Building building)
+	{
+		// Make sure the player is at the right point in their turn
+		if(GameManager.instance.CurrentTurnState != TurnState.BuyProperties)
+		{
+			Debug.Log("Wrong turn state");
+			return false;
+		}
+
+		// Check if the land has been cleared
+		if(!IsLandCleared(building.BuildingTier))
+		{
+			Debug.Log("Land not cleared!");
+			return false;
+		}
+
+		// Check if the player has not already built the building
+		if(IsBuilt(building))
+		{
+			Debug.Log("The building is already built!");
+			return false;
+		}
+
+		// Check if the player has enough money
+		if(CurrentMoney < building.Cost)
+		{
+			Debug.Log("Not enough money!");
+			return false;
+		}
+
+		return true;
 	}
 
 	/// <summary>
@@ -165,6 +198,64 @@ public class Player
 				return false;
 
 		return true;
+	}
+
+	/// <summary>
+	/// Builds a building
+	/// </summary>
+	/// <param name="building">The building being built</param>
+	public void Build(Building building)
+	{
+		Debug.Log("test");
+
+		// Check if the player can buy the building
+		if(!CanBuild(building))
+			return;
+
+		// Allow other players to challenge the building
+		// TODO: ask other players if they want to use a legal action card
+
+		// "Build" the building
+		foreach(Building playerBuilding in buildings)
+			if(playerBuilding.BuildingName == building.BuildingName)
+				playerBuilding.Buy();
+
+		// Remove building cost from player
+		currentMoney -= building.Cost;
+
+		// Update UI
+		UIManager.instance.UpdatePlayerStatsText(this);
+
+		// Update the player's income mulitplier changes
+		PostBuildCheck();
+
+		// Advance the turn
+		GameManager.instance.AdvanceTurn();
+	}
+
+	/// <summary>
+	/// Checks the player's buildings for their income multiplier and whether they won the game
+	/// </summary>
+	private void PostBuildCheck()
+	{
+		// Default multiplier amount
+		int multiplier = 1;
+
+		if(IsBuilt(BuildingTier.Tier1))
+			multiplier++;
+
+		if(IsBuilt(BuildingTier.Tier2))
+			multiplier++;
+
+		if(IsBuilt(BuildingTier.Tier3))
+			multiplier++;
+
+		// All sets are built, so all buildings are built,
+		// so the player has won the game
+		if(multiplier == 4)
+			GameManager.instance.EndGame(this);
+		else
+			incomeMulitplier = multiplier;
 	}
 
 	/// <summary>

@@ -75,7 +75,7 @@ public class CardManager : MonoBehaviour
 
     private void AddStaticAmount(int amount)
 	{
-        GameManager.instance.Players[GameManager.instance.CurrentTurn].CollectIncome(amount);
+        GameManager.instance.CurrentPlayer.CollectIncome(amount);
 	}
 
     private void SubtractStaticAmount(int amount)
@@ -86,15 +86,15 @@ public class CardManager : MonoBehaviour
     private void AddContingentAmount(int amount, Building contingencyBuilding)
 	{
         // Check if the player has built the prerequisite building
-        if(GameManager.instance.Players[GameManager.instance.CurrentTurn].IsBuilt(contingencyBuilding))
+        if(GameManager.instance.CurrentPlayer.IsBuilt(contingencyBuilding))
             AddStaticAmount(amount);
     }
 
     private void DestroyBuilding(int unusedAmount, Building buildingToDestroy)
 	{
         // Check if the player has built the prerequisite building
-        if(GameManager.instance.Players[GameManager.instance.CurrentTurn].IsBuilt(buildingToDestroy))
-            GameManager.instance.Players[GameManager.instance.CurrentTurn].LoseBuilding(buildingToDestroy);
+        if(GameManager.instance.CurrentPlayer.IsBuilt(buildingToDestroy))
+            GameManager.instance.CurrentPlayer.LoseBuilding(buildingToDestroy);
     }
 
     // TODO: Lose/Double Income

@@ -30,10 +30,10 @@ public class UIManager : MonoBehaviour
     private GameObject mainMenuParent, gameParent, gameEndParent;
     [SerializeField]    // Buttons
     private GameObject playButton, quitButton, gameEndToMainMenuButton;
+    [SerializeField]    // Empty object parents (in gameParent)
+    private GameObject playerStatsParent, mapParent, selectedBuildingParent, landParent;
     [SerializeField]
-    private GameObject mapParent;
-    [SerializeField]
-    private GameObject selectedBuildingParent;
+    private GameObject currentTurnStateText;
 
     // Non-UI Elements
     private Dictionary<Player, GameObject> playerStatsUI;
@@ -69,11 +69,20 @@ public class UIManager : MonoBehaviour
         }
 
 		// Map Building Buttons
-		for(int i = 0; i < mapParent.transform.childCount; i++)
-            if(mapParent.transform.GetChild(i).tag == "playerBuildingParent")
-			    foreach(Transform buildingChild in mapParent.transform.GetChild(i))
+		foreach(Transform playerBuildings in mapParent.transform.GetChild(1))
+            if(playerBuildings.tag == "playerBuildingParent")
+			    foreach(Transform buildingChild in playerBuildings)
 				    if(buildingChild.GetComponent<Button>() != null)
 					    buildingChild.GetComponent<Button>().onClick.AddListener(() => SelectBuilding(buildingChild.gameObject.name));
+
+        // Map Land Buttons
+        foreach(Transform playerLandButtons in landParent.transform)
+            for(int j = 0; j < playerLandButtons.childCount; j++)
+                if(playerLandButtons.GetChild(j).GetComponent<Button>() != null)
+				{
+                    BuildingTier tier = (BuildingTier)j;
+                    playerLandButtons.GetChild(j).GetComponent<Button>().onClick.AddListener(() => SelectLand(tier));
+				}
 
         // Buy Building Button
         selectedBuildingParent.transform.GetChild(0).GetChild(2).GetComponent<Button>().onClick.AddListener(
@@ -85,24 +94,22 @@ public class UIManager : MonoBehaviour
     /// </summary>
     private void UpdateUI()
     {
+        // TODO: remove this logic and call it only when it needs to change
         if(GameManager.instance.CurrentMenuState == MenuState.Game)
 		{
-            // Based on which player is taking their turn, update their stats text
-            UpdatePlayerStatsText(GameManager.instance.CurrentTurn);
-
             // Change the color of the panel of the player who's turn it is
-            for(int i = 0; i < gameParent.transform.childCount; i++)
+            for(int i = 0; i < playerStatsParent.transform.childCount; i++)
 			{
-                if(gameParent.transform.GetChild(i).tag != "playerPanel")
+                if(playerStatsParent.transform.GetChild(i).tag != "playerPanel")
                     continue;
 
                 if(i == GameManager.instance.CurrentTurn
                     && GameManager.instance.CurrentTurnState == TurnState.Income)
-					gameParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.yellow;
+                    playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.yellow;
                 else if(i == GameManager.instance.CurrentTurn)
-					gameParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.green;
+                    playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.green;
                 else
-					gameParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.white;
+                    playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.white;
 			}
 
             // Update the selected building
@@ -116,6 +123,9 @@ public class UIManager : MonoBehaviour
                 selectedBuildingParent.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text 
                     = "Cost: $" + BuildingManager.instance.CurrentSelectedBuilding.Cost;
             } 
+
+            // Update the current turn state text
+            currentTurnStateText.GetComponent<TMP_Text>().text = GameManager.instance.CurrentTurnState.ToString();
         }
     }
 
@@ -139,8 +149,8 @@ public class UIManager : MonoBehaviour
                 gameParent.gameObject.SetActive(true);
 
                 // Hide all red dots
-                for(int i = 0; i < gameParent.transform.childCount; i++)
-                    if(gameParent.transform.GetChild(i).tag == "playerPanel")
+                for(int i = 0; i < playerStatsParent.transform.childCount; i++)
+                    if(playerStatsParent.transform.GetChild(i).tag == "playerPanel")
                         UpdateRedDot(i, false);
                 break;
             case MenuState.GameEnd:
@@ -157,30 +167,30 @@ public class UIManager : MonoBehaviour
         playerStatsUI = new Dictionary<Player, GameObject>();
 
         for(int i = 0; i < GameManager.instance.Players.Count; i++)
-            playerStatsUI.Add(GameManager.instance.Players[i], gameParent.transform.GetChild(i).GetChild(0).gameObject);
+            playerStatsUI.Add(GameManager.instance.Players[i], playerStatsParent.transform.GetChild(i).GetChild(0).gameObject);
     }
 
     /// <summary>
     /// Update the text to display correct stats of a player
     /// </summary>
-    /// <param name="currentTurn">The index of the player that currently is taking their turn</param>
-    private void UpdatePlayerStatsText(int currentTurn)
+    /// <param name="player">The player whose stats are being updated</param>
+    public void UpdatePlayerStatsText(Player player)
 	{
-        string updatedText = "Money: " + GameManager.instance.Players[currentTurn].CurrentMoney;
+        string updatedText = "Money: " + player.CurrentMoney;
 
         // Only display the "+ income" text if it is that player's turn and they are still rolling for income
         if(GameManager.instance.CurrentTurnState == TurnState.Income)
 		{
-            updatedText += " + " + GameManager.instance.TempIncome * GameManager.instance.Players[currentTurn].IncomeMulitplier;
+            updatedText += " + " + GameManager.instance.TempIncome * player.IncomeMulitplier;
         } 
         else if(GameManager.instance.CurrentTurnState == TurnState.OpprotunityCard)
 		{
-            int totalIncome = GameManager.instance.TempIncome * GameManager.instance.Players[currentTurn].IncomeMulitplier;
+            int totalIncome = GameManager.instance.TempIncome * player.IncomeMulitplier;
             if(totalIncome > 0)
                 updatedText += " + " + totalIncome;
         }
 
-        playerStatsUI[GameManager.instance.Players[currentTurn]].transform.GetChild(1).GetComponent<TMP_Text>().text = updatedText;
+        playerStatsUI[player].transform.GetChild(1).GetComponent<TMP_Text>().text = updatedText;
     }
 
     /// <summary>
@@ -197,7 +207,7 @@ public class UIManager : MonoBehaviour
     /// Interprets a building button into selecting that building
     /// </summary>
     /// <param name="buildingName">The name of the building button</param>
-    public void SelectBuilding(string buildingName)
+    private void SelectBuilding(string buildingName)
 	{
         Building selectedBuilding = BuildingManager.instance.GetBuildingByIndex(
             int.Parse(buildingName.Substring(8, 1)),
@@ -205,4 +215,23 @@ public class UIManager : MonoBehaviour
 
         BuildingManager.instance.SelectBuilding(selectedBuilding);
 	}
+
+    /// <summary>
+    /// Selects clearable land
+    /// </summary>
+    /// <param name="tier">The tier of land selected</param>
+    private void SelectLand(BuildingTier tier)
+	{
+        // Buy the land
+        GameManager.instance.CurrentPlayer.ClearLand((BuildingTier)tier);
+	}
+
+    /// <summary>
+    /// Hide the land button that was clicked
+    /// </summary>
+    /// <param name="tier">The tier of land that was cleared</param>
+    public void HideLandButton(int tier)
+	{
+        landParent.transform.GetChild(GameManager.instance.CurrentTurn).GetChild(tier).gameObject.SetActive(false);
+    }
 }

@@ -71,6 +71,7 @@ public class GameManager : MonoBehaviour
     }
 
     // Getters
+    public Player CurrentPlayer { get { return Players[currentTurn]; } }
     public Dictionary<Color, string> PlayerColors { get { return playerColors; } }
     public List<Player> Players { get { return players; } }
     public int CurrentTurn { get { return currentTurn; } }
@@ -174,7 +175,10 @@ public class GameManager : MonoBehaviour
 				{
                     players[currentTurn].CollectIncome(tempIncome);
                     ChangeTurnState(TurnState.BuyTownMeetingCards);
-				}
+
+                    // Update UI
+                    UIManager.instance.UpdatePlayerStatsText(CurrentPlayer);
+                }
                 break;
             case TurnState.BuyTownMeetingCards:
                 if(Input.GetKeyDown(KeyCode.Return))
@@ -182,16 +186,24 @@ public class GameManager : MonoBehaviour
                 break;
             case TurnState.BuyProperties:
                 if(Input.GetKeyDown(KeyCode.Return))
-				{
                     // Advance the turn to the next player
-                    currentTurn++;
-                    if(currentTurn == players.Count)
-                        currentTurn = 0;
-
-                    ChangeTurnState(TurnState.Income);
-				}                    
+                    AdvanceTurn();
                 break;
         }
+    }
+
+    /// <summary>
+    /// Advances the turn to the next player
+    /// </summary>
+    public void AdvanceTurn()
+	{
+        // Go to the next player
+        currentTurn++;
+        if(currentTurn == players.Count)
+            currentTurn = 0;
+
+        // Set the turn state to income
+        ChangeTurnState(TurnState.Income);
     }
 
     /// <summary>
@@ -212,11 +224,14 @@ public class GameManager : MonoBehaviour
 			}
             else 
                 tempIncome += result;
-		}
+        }
         // Press 'T' to "stay"; the player will gain the income accumulated
         else if(Input.GetKeyDown(KeyCode.T))
             ChangeTurnState(TurnState.OpprotunityCard);
-	}
+
+        // Update UI
+        UIManager.instance.UpdatePlayerStatsText(CurrentPlayer);
+    }
 
     /// <summary>
     /// Roll the dice
