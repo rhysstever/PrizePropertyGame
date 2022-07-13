@@ -67,7 +67,7 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        CheckTurnActions();
+
     }
 
     // Getters
@@ -127,6 +127,7 @@ public class GameManager : MonoBehaviour
                 UIManager.instance.UpdateRedDot(CurrentTurn, false);
                 break;
             case TurnState.BuyProperties:
+                UIManager.instance.UpdateSelectedUI(null);
                 break;
         }
 
@@ -164,38 +165,6 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Recurring checks for actions that can be taken on the player's turn
-    /// </summary>
-    private void CheckTurnActions()
-	{
-        switch(currentTurnState)
-        {
-            case TurnState.Income:
-                GenerateIncome();
-                break;
-            case TurnState.OpprotunityCard:
-                if(Input.GetKeyDown(KeyCode.Return))
-				{
-                    players[currentTurn].CollectIncome(tempIncome);
-                    ChangeTurnState(TurnState.BuyTownMeetingCards);
-
-                    // Update UI
-                    UIManager.instance.UpdatePlayerStatsText(CurrentPlayer);
-                }
-                break;
-            case TurnState.BuyTownMeetingCards:
-                if(Input.GetKeyDown(KeyCode.Return))
-                    ChangeTurnState(TurnState.BuyProperties);
-                break;
-            case TurnState.BuyProperties:
-                if(Input.GetKeyDown(KeyCode.Return))
-                    // Advance the turn to the next player
-                    AdvanceTurn();
-                break;
-        }
-    }
-
-    /// <summary>
     /// Advances the turn to the next player
     /// </summary>
     public void AdvanceTurn()
@@ -209,28 +178,18 @@ public class GameManager : MonoBehaviour
         ChangeTurnState(TurnState.Income);
     }
 
-    /// <summary>
-    /// Generate income as the player rolls the dice
-    /// </summary>
-    private void GenerateIncome()
+    public void RollIncome()
 	{
-        // Press 'R' to roll the dice
-		if(Input.GetKeyDown(KeyCode.R))
-		{
-            int result = Roll();
-            if(result == 0)
-            {
-                // If a '0' is rolled (a red dot) the player gets 0 income for this turn
-                tempIncome = 0;
-                UIManager.instance.UpdateRedDot(CurrentTurn, true);
-                ChangeTurnState(TurnState.OpprotunityCard);
-			}
-            else 
-                tempIncome += result;
-        }
-        // Press 'T' to "stay"; the player will gain the income accumulated
-        else if(Input.GetKeyDown(KeyCode.T))
+        int result = Roll();
+        if(result == 0)
+        {
+            // If a '0' is rolled (a red dot) the player gets 0 income for this turn
+            tempIncome = 0;
+            UIManager.instance.UpdateRedDot(CurrentTurn, true);
             ChangeTurnState(TurnState.OpprotunityCard);
+        }
+        else
+            tempIncome += result;
 
         // Update UI
         UIManager.instance.UpdatePlayerStatsText(CurrentPlayer);
@@ -259,6 +218,15 @@ public class GameManager : MonoBehaviour
         else
             return 1;
 	}
+
+    public void DrawOpprotunityCard()
+	{
+        players[currentTurn].CollectIncome(tempIncome);
+        ChangeTurnState(TurnState.BuyTownMeetingCards);
+
+        // Update UI
+        UIManager.instance.UpdatePlayerStatsText(CurrentPlayer);
+    }
 
     /// <summary>
     /// Ends the game

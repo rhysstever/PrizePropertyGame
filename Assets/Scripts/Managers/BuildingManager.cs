@@ -24,9 +24,11 @@ public class BuildingManager : MonoBehaviour
 
     private List<Building> buildings;
     private Building currentSelectedBuilding;
+    private int currentSelectedLandTier;
 
     public List<Building> Buildings { get { return buildings; } }
     public Building CurrentSelectedBuilding { get { return currentSelectedBuilding; } }
+    public int CurrentSelectedLandTier { get { return currentSelectedLandTier; } }
 
     // Start is called before the first frame update
     void Start()
@@ -60,15 +62,37 @@ public class BuildingManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Select a piece of uncleared land
+    /// </summary>
+    /// <param name="landTier">The tier of land being selected</param>
+    public void SelectLand(int landTier)
+    {
+        // Ensure the player is in the buy properties stage of their turn
+        if(GameManager.instance.CurrentTurnState != TurnState.BuyProperties)
+            return;
+
+        currentSelectedBuilding = null;
+        currentSelectedLandTier = landTier;
+
+        // Update UI
+        UIManager.instance.UpdateSelectedUI(currentSelectedLandTier);
+    }
+
+    /// <summary>
     /// Select a new building
     /// </summary>
     /// <param name="building">The building being selected</param>
     public void SelectBuilding(Building building)
-	{
+    {
+        // Ensure the player is in the buy properties stage of their turn
+        if(GameManager.instance.CurrentTurnState != TurnState.BuyProperties)
+            return;
+
+        currentSelectedLandTier = -1;
         currentSelectedBuilding = building;
 
         // Update UI
-        UIManager.instance.UpdateSelectedBuildingUI(currentSelectedBuilding);
+        UIManager.instance.UpdateSelectedUI(currentSelectedBuilding);
 	}
 
     /// <summary>
@@ -101,8 +125,12 @@ public class BuildingManager : MonoBehaviour
     /// <summary>
     /// Builds the currently selected building for the current player
     /// </summary>
-    public void CurrentPlayerBuildCurrentBuilding()
+    public void CurrentPlayerBuildCurrentSelection()
 	{
-        GameManager.instance.CurrentPlayer.Build(currentSelectedBuilding);
-	}
+        if(currentSelectedBuilding != null)
+            GameManager.instance.CurrentPlayer.Build(currentSelectedBuilding);
+        else if(currentSelectedLandTier >= 0 && currentSelectedLandTier < 3)
+            GameManager.instance.CurrentPlayer.ClearLand((BuildingTier)currentSelectedLandTier);
+
+    }
 }

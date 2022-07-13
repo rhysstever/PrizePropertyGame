@@ -2,6 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum TownMeetingCardType
+{
+    LegalAction,
+    Defense
+}
+
 public class TownMeetingManager : MonoBehaviour
 {
     #region Singleton Code
@@ -22,13 +28,15 @@ public class TownMeetingManager : MonoBehaviour
     }
     #endregion
 
+    private List<TownMeetingCardType> townMeetingDeckList;
+
     private int legalActionCount;
     private int defenseCount;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        SetupTownMeetingDeck();
     }
 
     // Update is called once per frame
@@ -37,20 +45,39 @@ public class TownMeetingManager : MonoBehaviour
 
     }
 
+    private void SetupTownMeetingDeck()
+	{
+        townMeetingDeckList = new List<TownMeetingCardType>();
+
+        // Add legal action cards to deck
+        for(int i = 0; i < 18; i++)
+            townMeetingDeckList.Add(TownMeetingCardType.LegalAction);
+
+        // Add defense cards to deck
+        for(int i = 0; i < 16; i++)
+            townMeetingDeckList.Add(TownMeetingCardType.Defense);
+    }
+
+    public TownMeetingCardType BuyTownMeetingCard()
+	{
+        int randIndex = Random.Range(0, townMeetingDeckList.Count);
+        TownMeetingCardType tmCard = townMeetingDeckList[randIndex];
+        townMeetingDeckList.RemoveAt(randIndex);
+        return tmCard;
+	}
+
     public void ClearTownMeetingCards()
 	{
         legalActionCount = 0;
         defenseCount = 0;
 	}
 
-    public void AddLegalAction()
-    {
-        legalActionCount++;
-    }
-
-    public void AddDefense()
+    public void AddPlayedCard(TownMeetingCardType cardType)
 	{
-        defenseCount++;
+        if(cardType == TownMeetingCardType.LegalAction)
+            legalActionCount++;
+        else
+            defenseCount++;
 	}
 
     public string GetTownMeetingDecision()

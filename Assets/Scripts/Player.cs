@@ -18,8 +18,7 @@ public class Player
 	private List<Building> buildings;
 
 	// Town Meeting Cards
-	private int legalActionCardCount;
-	private int defenseCardCount;
+	private Dictionary<TownMeetingCardType, int> townMeetingCards;
 	#endregion
 
 	#region Properties
@@ -40,9 +39,7 @@ public class Player
 		incomeMulitplier = 1;
 
 		SetupLand();
-
-		legalActionCardCount = 0;
-		defenseCardCount = 0;
+		SetupTownMeetingCardsDictionary();
 	}
 
 	#region Methods
@@ -191,7 +188,7 @@ public class Player
 	{
 		// Determine an index offset based on the type of set is being checked 
 		int indexOffset = (int)buildingType * 3;
-		
+
 		// Loop through the building set, if any haven't been bought, then the set is not bought
 		for(int i = 0; i < 3; i++)
 			if(!buildings[indexOffset + i].IsBought)
@@ -269,7 +266,7 @@ public class Player
 	{
 		currentMoney += incomeAmount * incomeMulitplier;
 	}
-	
+
 	/// <summary>
 	/// Causes the player to lose a building
 	/// </summary>
@@ -282,35 +279,40 @@ public class Player
 	}
 
 	/// <summary>
+	/// Setup the dictionary to hold the player's town meeting cards
+	/// </summary>
+	private void SetupTownMeetingCardsDictionary()
+	{
+		townMeetingCards = new Dictionary<TownMeetingCardType, int>();
+
+		townMeetingCards.Add(TownMeetingCardType.LegalAction, 0);
+		townMeetingCards.Add(TownMeetingCardType.Defense, 0);
+	}
+
+	public void BuyTownMeetingCard()
+	{
+		if(currentMoney >= 3)
+		{
+			currentMoney -= 3;
+			TownMeetingCardType newlyBoughtCardType = TownMeetingManager.instance.BuyTownMeetingCard();
+			townMeetingCards[newlyBoughtCardType]++;
+			UIManager.instance.UpdatePlayerStatsText(this);
+			GameManager.instance.ChangeTurnState(TurnState.BuyProperties);
+		}
+	}
+
+	/// <summary>
 	/// Plays a player's town meeting card
 	/// </summary>
-	/// <param name="cardName">Whether the card is a defense or legal action card</param>
-	public void PlayTownHallCard(string cardName)
+	/// <param name="cardType">Whether the card is a defense or legal action card</param>
+	public void PlayTownMeetingCard(TownMeetingCardType cardType)
 	{
-		if(cardName.ToLower() == "defense")
+		if(townMeetingCards[cardType] > 0)
 		{
-			if(defenseCardCount > 0)
-			{
-				legalActionCardCount--;
-				TownMeetingManager.instance.AddDefense();
-			}
-			else
-			{
-				Debug.Log("Not enough defense cards");
-			}
-		}
-		else if(cardName.ToLower() == "legal action")
-		{
-			if(legalActionCardCount > 0)
-			{
-				legalActionCardCount--;
-				TownMeetingManager.instance.AddLegalAction();
-			}
-			else
-			{
-				Debug.Log("Not enough legal action cards");
-			}
-		}		
+			townMeetingCards[cardType]--;
+			TownMeetingManager.instance.AddPlayedCard(cardType);
+		} else
+			Debug.Log("Not enough " + cardType.ToString() + " cards");
 	}
 	#endregion
 

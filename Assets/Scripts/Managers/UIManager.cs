@@ -31,9 +31,9 @@ public class UIManager : MonoBehaviour
     [SerializeField]    // Buttons
     private GameObject playButton, quitButton, gameEndToMainMenuButton;
     [SerializeField]    // Empty object parents (in gameParent)
-    private GameObject playerStatsParent, mapParent, selectedBuildingParent, landParent;
-    [SerializeField]
-    private GameObject currentTurnStateText;
+    private GameObject playerStatsParent, mapParent, landParent;
+    [SerializeField]    // Empty object parents (for each turn state related in gameParent)
+    private GameObject turnSideParent, incomeParent, opprotunityCardParent, buyTMCardParent, selectedParent;
 
     // Non-UI Elements
     private Dictionary<Player, GameObject> playerStatsUI;
@@ -48,7 +48,7 @@ public class UIManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // UpdateUI();
+        
     }
 
     /// <summary>
@@ -84,10 +84,25 @@ public class UIManager : MonoBehaviour
                     playerLandButtons.GetChild(j).GetComponent<Button>().onClick.AddListener(() => SelectLand(tier));
 				}
 
-        // Buy Building Button
-        selectedBuildingParent.transform.GetChild(0).GetChild(2).GetComponent<Button>().onClick.AddListener(
-            () => BuildingManager.instance.CurrentPlayerBuildCurrentBuilding());
-	}
+        // Turn State Buttons
+        incomeParent.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(
+            () => GameManager.instance.RollIncome());
+        incomeParent.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(
+            () => GameManager.instance.ChangeTurnState(TurnState.OpprotunityCard));
+
+        opprotunityCardParent.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(
+            () => GameManager.instance.DrawOpprotunityCard());
+
+        buyTMCardParent.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(
+            () => GameManager.instance.CurrentPlayer.BuyTownMeetingCard());   // TODO: add random TM card to player
+        buyTMCardParent.transform.GetChild(3).GetComponent<Button>().onClick.AddListener(
+            () => GameManager.instance.ChangeTurnState(TurnState.BuyProperties));
+
+        selectedParent.transform.GetChild(3).GetComponent<Button>().onClick.AddListener(
+            () => BuildingManager.instance.CurrentPlayerBuildCurrentSelection());
+        selectedParent.transform.GetChild(4).GetComponent<Button>().onClick.AddListener(
+            () => GameManager.instance.AdvanceTurn());
+    }
 
     /// <summary>
     /// Runs recurring logic, updating UI elements
@@ -138,36 +153,30 @@ public class UIManager : MonoBehaviour
             if(playerStatsParent.transform.GetChild(i).tag != "playerPanel")
                 continue;
 
-            // Yellow - Player rolling for income
-            if(i == GameManager.instance.CurrentTurn
-                && GameManager.instance.CurrentTurnState == TurnState.Income)
+            if(i == GameManager.instance.CurrentTurn)
                 playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.yellow;
-            // Green - IS the player's turn; not rolling for income
-            else if(i == GameManager.instance.CurrentTurn)
-                playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.green;
-            // White - not the player's turn
             else
                 playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.white;
         }
 
-        // Update the current turn state text
-        string newCurrentTurnStateText = "";
+        // Update current turn state UI
+        foreach(Transform turnStateChildUI in turnSideParent.transform.GetChild(0))
+            turnStateChildUI.gameObject.SetActive(false);
         switch(GameManager.instance.CurrentTurnState)
         {
             case TurnState.Income:
-                newCurrentTurnStateText = "Roll for Income";
+                incomeParent.SetActive(true);
                 break;
             case TurnState.OpprotunityCard:
-                newCurrentTurnStateText = "Draw an \nOpprotunity Card";
+                opprotunityCardParent.SetActive(true);
                 break;
             case TurnState.BuyTownMeetingCards:
-                newCurrentTurnStateText = "Buy Town \nMeeting Cards";
+                buyTMCardParent.SetActive(true);
                 break;
             case TurnState.BuyProperties:
-                newCurrentTurnStateText = "Buy Properties";
+                selectedParent.SetActive(true);
                 break;
         }
-        currentTurnStateText.GetComponent<TMP_Text>().text = newCurrentTurnStateText;
     }
 
     /// <summary>
@@ -233,9 +242,7 @@ public class UIManager : MonoBehaviour
     /// <param name="tier">The tier of land selected</param>
     private void SelectLand(BuildingTier tier)
 	{
-        // TODO: change to only select the land, not buy it
-        // Buy the land
-        GameManager.instance.CurrentPlayer.ClearLand(tier);
+        BuildingManager.instance.SelectLand((int)tier);
 	}
 
     /// <summary>
@@ -248,21 +255,48 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Update the selected building panel and text
+    /// Update the selected building panel and text with the building info
     /// </summary>
     /// <param name="selectedBuilding">The currently selected building</param>
-    public void UpdateSelectedBuildingUI(Building selectedBuilding)
+    public void UpdateSelectedUI(Building selectedBuilding)
 	{
         // Update the selected building
         if(selectedBuilding == null)
-            selectedBuildingParent.SetActive(false);
-        else
+		{
+            selectedParent.transform.GetChild(1).gameObject.SetActive(false);
+            selectedParent.transform.GetChild(2).gameObject.SetActive(false);
+		} else
         {
-            selectedBuildingParent.SetActive(true);
-            selectedBuildingParent.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text
+            selectedParent.transform.GetChild(1).gameObject.SetActive(true);
+            selectedParent.transform.GetChild(2).gameObject.SetActive(true);
+
+            selectedParent.transform.GetChild(1).GetComponent<TMP_Text>().text
                 = selectedBuilding.FullName;
-            selectedBuildingParent.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text
+            selectedParent.transform.GetChild(2).GetComponent<TMP_Text>().text
                 = "Cost: $" + selectedBuilding.Cost;
+        }
+    }
+
+    /// <summary>
+    /// Update the selected building panel and text with the land info
+    /// </summary>
+    /// <param name="landTier">The currently selected land's tier</param>
+    public void UpdateSelectedUI(int landTier)
+	{
+        // Update the selected building
+        if(landTier >= 0 && landTier < 3)
+        {
+            selectedParent.transform.GetChild(1).gameObject.SetActive(true);
+            selectedParent.transform.GetChild(2).gameObject.SetActive(true);
+
+            selectedParent.transform.GetChild(1).GetComponent<TMP_Text>().text
+                = "Uncleared Land (Tier " + (landTier + 1) + ")";
+            selectedParent.transform.GetChild(2).GetComponent<TMP_Text>().text
+                = "Cost: $5";
+        } else 
+        { 
+            selectedParent.transform.GetChild(1).gameObject.SetActive(false);
+            selectedParent.transform.GetChild(2).gameObject.SetActive(false);
         }
     }
 }
