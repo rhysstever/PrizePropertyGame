@@ -48,7 +48,7 @@ public class UIManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        UpdateUI();
+        // UpdateUI();
     }
 
     /// <summary>
@@ -94,39 +94,7 @@ public class UIManager : MonoBehaviour
     /// </summary>
     private void UpdateUI()
     {
-        // TODO: remove this logic and call it only when it needs to change
-        if(GameManager.instance.CurrentMenuState == MenuState.Game)
-		{
-            // Change the color of the panel of the player who's turn it is
-            for(int i = 0; i < playerStatsParent.transform.childCount; i++)
-			{
-                if(playerStatsParent.transform.GetChild(i).tag != "playerPanel")
-                    continue;
-
-                if(i == GameManager.instance.CurrentTurn
-                    && GameManager.instance.CurrentTurnState == TurnState.Income)
-                    playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.yellow;
-                else if(i == GameManager.instance.CurrentTurn)
-                    playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.green;
-                else
-                    playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.white;
-			}
-
-            // Update the selected building
-            if(BuildingManager.instance.CurrentSelectedBuilding == null)
-                selectedBuildingParent.SetActive(false);
-			else
-			{
-                selectedBuildingParent.SetActive(true);
-                selectedBuildingParent.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text 
-                    = BuildingManager.instance.CurrentSelectedBuilding.FullName;
-                selectedBuildingParent.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text 
-                    = "Cost: $" + BuildingManager.instance.CurrentSelectedBuilding.Cost;
-            } 
-
-            // Update the current turn state text
-            currentTurnStateText.GetComponent<TMP_Text>().text = GameManager.instance.CurrentTurnState.ToString();
-        }
+        
     }
 
     /// <summary>
@@ -158,6 +126,49 @@ public class UIManager : MonoBehaviour
                 break;
         }
 	}
+
+    /// <summary>
+    /// Update the panels depending on the current turn
+    /// </summary>
+    public void UpdatePlayerTurnUI()
+	{
+        // Change the color of the panel of the player who's turn it is
+        for(int i = 0; i < playerStatsParent.transform.childCount; i++)
+        {
+            if(playerStatsParent.transform.GetChild(i).tag != "playerPanel")
+                continue;
+
+            // Yellow - Player rolling for income
+            if(i == GameManager.instance.CurrentTurn
+                && GameManager.instance.CurrentTurnState == TurnState.Income)
+                playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.yellow;
+            // Green - IS the player's turn; not rolling for income
+            else if(i == GameManager.instance.CurrentTurn)
+                playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.green;
+            // White - not the player's turn
+            else
+                playerStatsParent.transform.GetChild(i).GetComponent<Image>().color = UnityEngine.Color.white;
+        }
+
+        // Update the current turn state text
+        string newCurrentTurnStateText = "";
+        switch(GameManager.instance.CurrentTurnState)
+        {
+            case TurnState.Income:
+                newCurrentTurnStateText = "Roll for Income";
+                break;
+            case TurnState.OpprotunityCard:
+                newCurrentTurnStateText = "Draw an \nOpprotunity Card";
+                break;
+            case TurnState.BuyTownMeetingCards:
+                newCurrentTurnStateText = "Buy Town \nMeeting Cards";
+                break;
+            case TurnState.BuyProperties:
+                newCurrentTurnStateText = "Buy Properties";
+                break;
+        }
+        currentTurnStateText.GetComponent<TMP_Text>().text = newCurrentTurnStateText;
+    }
 
     /// <summary>
     /// Links a player object to the UI parent element that displays its stats
@@ -222,8 +233,9 @@ public class UIManager : MonoBehaviour
     /// <param name="tier">The tier of land selected</param>
     private void SelectLand(BuildingTier tier)
 	{
+        // TODO: change to only select the land, not buy it
         // Buy the land
-        GameManager.instance.CurrentPlayer.ClearLand((BuildingTier)tier);
+        GameManager.instance.CurrentPlayer.ClearLand(tier);
 	}
 
     /// <summary>
@@ -233,5 +245,24 @@ public class UIManager : MonoBehaviour
     public void HideLandButton(int tier)
 	{
         landParent.transform.GetChild(GameManager.instance.CurrentTurn).GetChild(tier).gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// Update the selected building panel and text
+    /// </summary>
+    /// <param name="selectedBuilding">The currently selected building</param>
+    public void UpdateSelectedBuildingUI(Building selectedBuilding)
+	{
+        // Update the selected building
+        if(selectedBuilding == null)
+            selectedBuildingParent.SetActive(false);
+        else
+        {
+            selectedBuildingParent.SetActive(true);
+            selectedBuildingParent.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text
+                = selectedBuilding.FullName;
+            selectedBuildingParent.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text
+                = "Cost: $" + selectedBuilding.Cost;
+        }
     }
 }

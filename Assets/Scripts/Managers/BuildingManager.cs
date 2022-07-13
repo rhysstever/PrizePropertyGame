@@ -32,6 +32,7 @@ public class BuildingManager : MonoBehaviour
     void Start()
     {
         CreateBuildingDictionary();
+        SelectBuilding(null);
     }
 
     // Update is called once per frame
@@ -65,6 +66,9 @@ public class BuildingManager : MonoBehaviour
     public void SelectBuilding(Building building)
 	{
         currentSelectedBuilding = building;
+
+        // Update UI
+        UIManager.instance.UpdateSelectedBuildingUI(currentSelectedBuilding);
 	}
 
     /// <summary>

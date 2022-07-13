@@ -223,6 +223,9 @@ public class Player
 		// Remove building cost from player
 		currentMoney -= building.Cost;
 
+		// Deselect Building
+		BuildingManager.instance.SelectBuilding(null);
+
 		// Update UI
 		UIManager.instance.UpdatePlayerStatsText(this);
 

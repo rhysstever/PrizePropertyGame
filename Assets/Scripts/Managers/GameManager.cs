@@ -131,7 +131,10 @@ public class GameManager : MonoBehaviour
         }
 
         currentTurnState = newTurnState;
-	}
+
+        // Update UI
+        UIManager.instance.UpdatePlayerTurnUI();
+    }
 
     /// <summary>
     /// Fills the dictionary of player colors
